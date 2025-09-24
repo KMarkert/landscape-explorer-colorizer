@@ -31,9 +31,7 @@ This web application allows users to select a location on a map and view black a
 
 2.  Create a virtual environment and install the dependencies:
     ```bash
-    python3 -m uv venv
-    source .venv/bin/activate
-    python3 -m uv pip install -r requirements.txt
+    uv sync
     ```
 
 3.  Create a `.env` file in the root of the project and add your API keys:
@@ -44,7 +42,7 @@ This web application allows users to select a location on a map and view black a
 
 4.  Run the application:
     ```bash
-    python3 -m uvicorn main:app --reload
+    uv run uvicorn main:app --reload
     ```
 
 5.  Open your browser and navigate to `http://127.0.0.1:8000`.
@@ -59,21 +57,32 @@ This web application allows users to select a location on a map and view black a
 
 ### Steps
 
-1.  **Build the Docker image** using Cloud Build:
+1.  ** Create Artifact Registry repository **:
     ```bash
-    gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/landscape-explorer
+    gcloud artifacts repositories create landscape-explorer \
+        --repository-format=docker \
+        --location=us-central1
     ```
-    Replace `YOUR_PROJECT_ID` with your Google Cloud project ID.
+   
+
+2.  **Build the Docker image** using Cloud Build:
+    Update `cloudbuild.yaml` with the correct cloud project. Replace `YOUR_PROJECT_ID` with your Google Cloud project ID.
+
+    ```bash
+    gcloud builds submit --config cloudbuild.yaml 
+    ```
+    
 
 2.  **Deploy the image** to Cloud Run:
     ```bash
     gcloud run deploy landscape-explorer \
-        --image gcr.io/YOUR_PROJECT_ID/landscape-explorer \
+        --image us-central1-docker.pkg.dev/YOUR-PROJECT-ID/landscape-explorer-colorizer/lce-image \
         --platform managed \
         --region us-central1 \
         --allow-unauthenticated \
         --set-env-vars GOOGLE_MAPS_API_KEY="YOUR_GOOGLE_MAPS_API_KEY" \
-        --set-env-vars GOOGLE_API_KEY="YOUR_GEMINI_API_KEY"
+        --set-env-vars GOOGLE_API_KEY="YOUR_GEMINI_API_KEY" \
+        --session-affinity
     ```
     Replace `YOUR_PROJECT_ID`, `YOUR_GOOGLE_MAPS_API_KEY`, and `YOUR_GEMINI_API_KEY` with your actual values.
 
